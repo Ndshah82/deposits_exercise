@@ -27,9 +27,10 @@ RSpec.describe "Deposits", type: :request do
     end
 
     it 'returns validation error for amount over balance' do
-      tradeline = FactoryBot.create(:tradeline)
+      tradeline = FactoryBot.create(:tradeline, name: '1')
+      
+      FactoryBot.create(:deposit, tradeline_id: tradeline.id, amount: 2000)
 
-      post "/tradelines/#{tradeline.id}/deposits", params: { tradeline_id: tradeline.id, amount: 2000 }
       post "/tradelines/#{tradeline.id}/deposits", params: { tradeline_id: tradeline.id, amount: 2000 }
 
       expect(response).to have_http_status(:bad_request)
@@ -37,15 +38,16 @@ RSpec.describe "Deposits", type: :request do
     end
 
     it 'renders success for valid entry' do
-      tradeline = FactoryBot.create(:tradeline)
+      tradeline = FactoryBot.create(:tradeline, name: '2')
 
-      post "/tradelines/#{tradeline.id}/deposits", params: { tradeline_id: tradeline.id, amount: 1000 }
-      post "/tradelines/#{tradeline.id}/deposits", params: { tradeline_id: tradeline.id, amount: 1000 }
+      FactoryBot.create(:deposit, tradeline_id: tradeline.id, amount: 1000)
+      
+      post "/tradelines/#{tradeline.id}/deposits", params: { tradeline_id: tradeline.id, amount: 2000 }
 
-      expect(response).to have_http_status(:ok )
+      expect(response).to have_http_status(:ok)
 
       body = JSON.parse(response.body)
-      expect(body['amount'].to_d).to eq(1000)
+      expect(body['amount'].to_d).to eq(2000)
     end
   end
 
@@ -68,12 +70,12 @@ RSpec.describe "Deposits", type: :request do
     it 'returns a list of deposits when there are some' do
       tradeline = FactoryBot.create(:tradeline)
 
-      post "/tradelines/#{tradeline.id}/deposits", params: { tradeline_id: tradeline.id, amount: 1000 }
-      post "/tradelines/#{tradeline.id}/deposits", params: { tradeline_id: tradeline.id, amount: 1000 }
+      FactoryBot.create(:deposit, tradeline_id: tradeline.id, amount: 1000)
+      FactoryBot.create(:deposit, tradeline_id: tradeline.id, amount: 1000)
 
       get "/tradelines/#{tradeline.id}/deposits"
 
-      expect(response).to have_http_status(:ok )
+      expect(response).to have_http_status(:ok)
 
       body = JSON.parse(response.body)
       expect(body.map { |h| h['amount'] }.map(&:to_d)).to eq([1000, 1000])
@@ -97,10 +99,9 @@ RSpec.describe "Deposits", type: :request do
 
     it 'returns the deposit when successfully found' do
       tradeline = FactoryBot.create(:tradeline)
+      deposit = FactoryBot.create(:deposit, tradeline_id: tradeline.id, amount: 1000)
 
-      post "/tradelines/#{tradeline.id}/deposits", params: { tradeline_id: tradeline.id, amount: 1000 }
-
-      get "/tradelines/#{tradeline.id}/deposits/#{tradeline.deposits.first.id}"
+      get "/tradelines/#{tradeline.id}/deposits/#{deposit.id}"
 
       expect(response).to have_http_status(:ok)
 

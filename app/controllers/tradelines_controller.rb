@@ -2,11 +2,11 @@ class TradelinesController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
 
   def index
-    render json: Tradeline.all
+    render json: TradelineRepresenter.for_collection.new(Tradeline.all).to_json(exclude: [:deposits])
   end
 
   def show
-    render json: Tradeline.find(params[:id])
+    render json: TradelineRepresenter.new(Tradeline.find(params[:id])).to_json(exclude: [:deposits])
   end
 
   private

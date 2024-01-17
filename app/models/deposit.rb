@@ -13,7 +13,7 @@ class Deposit < ApplicationRecord
     end
 
     def amount_less_than_tradeline_balance
-        unless tradeline_balance >= amount
+        unless tradeline_balance > 0
             errors.add(:amount, "greater than tradeline balance")
         end
     end
